@@ -69,54 +69,50 @@
 		}
 	}
 
-	ActiveChart.prototype = {
-		
-		'data': function(data) {
-			this.points = data;
+	ActiveChart.prototype.data = function(data) {
+		this.points = data;
+		return this;
+	};
 
-			return this;
-		},
+	// width scale (1 -> 100%, .5 -> 50%)
+	ActiveChart.prototype.scale = function(widthScale) {
+		this.scale = widthScale;
 
-		// width scale (1 -> 100%, .5 -> 50%)
-		'scale': function(widthScale) {
-			this.scale = widthScale;
+		return this;
+	};
 
-			return this;
-		},
+	// inner & outer chart padding
+	ActiveChart.prototype.padding = function(padding) {
 
-		// inner & outer chart padding
-		'padding': function(padding) {
+		this.padding = {};
 
-			this.padding = {};
+		this.padding.inner = padding[0]? padding[0] : _defaults.innerPadding,
+		this.padding.outer = padding[1]? padding[1] : _defaults.outerPadding;
 
-			this.padding.inner = padding[0]? padding[0] : _defaults.innerPadding,
-			this.padding.outer = padding[1]? padding[1] : _defaults.outerPadding;
+		return this;
+	};
 
-			return this;
-		},
+	// veritical or horizontal
+	ActiveChart.prototype.orient = function(orient) {
 
-		// veritical or horizontal
-		'orient': function(orient) {
+		var isOrientString = _util.is(orient, 'String');
 
-			var isOrientString = _util.is(orient, 'String');
-
-			if(isOrientString) {
-				if(orient === 'vertical' || orient === 'horizontal') {
-					this.orient = orient;
-				} else {
-					this.orient = _defaults.orient;
-				}
+		if(isOrientString) {
+			if(orient === 'vertical' || orient === 'horizontal') {
+				this.orient = orient;
 			} else {
-				throw new Error(_error.invalidOrient);
+				this.orient = _defaults.orient;
 			}
-
-			return this;
-		},
-
-		// draw the chart
-		'draw': function() {
-			_activeChart.call(this);
+		} else {
+			throw new Error(_error.invalidOrient);
 		}
+
+		return this;
+	};
+
+	// draw the chart
+	ActiveChart.prototype.draw = function() {
+		_activeChart.call(this);
 	};
 
 	// removes the need for user to use 'new'	
