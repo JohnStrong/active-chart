@@ -3,18 +3,11 @@
  *
  **/
 ;( function(d3) {
+
+	'use strict';
 	
+	var _activeChart = ( function() {
 
-	var _util = {
-
-		is: function(entity, type) {
-			Object.prototype.toString.call(entity).slice(8, -1);
-			return (entity === type);
-		}
-	},
-
-	_activeChart = ( function() {
-			
 			var _parentWidth = function() {
 				return d3.select(this.parentNode).style('width');
 			},
@@ -38,68 +31,101 @@
 			// set width; padding; orient, return result
 			return function(node) {
 
-				var dataLength = this.data.length,
-				// rWidth = d3.select(node).call(_parentWidth),
+				// test obj
+				console.log(this.scale, this.node, this.padding, this.points, this.orient);
 
-				padding = _setPadding(1278, dataLength),
-				rInner = padding.inner(this.innerPadding),
-				rOuter = padding.outer(this.outerPadding);
-
-				// set orient [vertical, horizontal]
+				// set props for chart...
 			};
 
 	} )(),
 	
 	activeChart = ( function() {
 		
-		var _error = {
-			'invalidId': 'first function parameter much be a valid element id'
-		},
+		var base = {};
 
-		_consts = {
+		base._error = {
+			'invalidId': 'first function parameter much be a valid element id',
+			'invalidOrient': 'orient property much be set to either veritical or horizontal'
+		};
+
+		base._consts = {
 			'width': 1,
 			'innerPadding': 0.5,
 			'outerPadding': 0,
-			'orientation': 'vertical'
+			'orient': 'vertical'
 		};
 
-		/**
-		 *	usage:
-		 *	
-		 *	id -> html id node preceded by a '#' in general d3 fashion
-		 *	
-		 *	props ->
-		 *		width [0 - 1] => (0% - 100%) ,
-		 *		innerPadding [0 - 1],
-		 *		outerPadding [0 - 1],
-		 *		orientation ['vertical', 'horizontal']
-		 *
-		 **/
-		return function(id, data, props) {
-			
-			var svgNode,
-				config = {};
+		base._util = {
 
+			is: function(entity, type) {
+				var clas = Object.prototype.toString.call(entity).slice(8, -1);
+				return (clas === type);
+			}
+		}
+
+		var self = base;
+
+		// node id
+		self['node'] = function(id) {
 			try {
-				svgNode = d3.select(id).append('svg');
+				this.node = d3.select(id);
 			}
 			catch (e) {
-				throw new Error(_error.invalidId);
+				throw new Error(this._error.invalidId);
 			}
 
-			// set chart configuration details
-
-			config.width = props.width? props.width : _consts.width;
-
-			config.innerPadding = props.innerPadding? props.innerPadding : _consts.innerPadding;
-			config.outerPadding = props.outerPadding? props.outerPadding : _consts.outerPadding;
-
-			config.orientation = props.orientation? props.orientation : _consts.orientation;
-
-			config.data = data;
-
-			_activeChart.call(config, svgNode[0]);
+			return this;
 		};
+
+		// data to chart
+		self['data'] = function(data) {
+			this.points = data;
+
+			return this;
+		};
+
+		// width scale (1 -> 100%, .5 -> 50%)
+		self['scale'] = function(widthScale) {
+			this.scale = widthScale;
+
+			return this;
+		};
+
+		// inner & outer chart padding
+		self['padding'] = function(padding) {
+
+			this.padding = {};
+
+			this.padding.inner = padding[0]? padding[0] : this._consts.innerPadding,
+			this.padding.outer = padding[1]? padding[1] : this._consts.outerPadding;
+
+			return this;
+		};
+
+		// veritical or horizontal
+		self['orient'] = function(orient) {
+
+			var isOrientString = this._util.is(orient, 'String');
+
+			if(isOrientString) {
+				if(orient === 'vertical' || orient === 'horizontal') {
+					this.orient = orient;
+				} else {
+					this.orient = this._consts.orient;
+				}
+			} else {
+				throw new Error(this._error.invalidOrient);
+			}
+
+			return this;
+		};
+
+		// draw the chart
+		self['draw'] = function() {
+			_activeChart.call(this);
+		};
+
+		return self;
 
 	} )();
 
