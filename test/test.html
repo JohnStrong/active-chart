@@ -53,8 +53,8 @@ div[class*='container-'] {
 			}
 		];
 
-		activeChart.data(testData)
-			.node('#test-100')
+		activeChart('#test-100')
+			.data(testData)
 			.scale(1.0)
 			.padding([0.5, 0.5])
 			.orient('vertical')
