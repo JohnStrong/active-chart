@@ -12,7 +12,8 @@
 	},
 
 	_defaults = {
-		'width': 1,
+		'height': 1000,
+		'scale': 1,
 		'innerPadding': 0.5,
 		'outerPadding': 0,
 		'orient': 'vertical'
@@ -23,41 +24,58 @@
 		is: function(entity, type) {
 			var clas = Object.prototype.toString.call(entity).slice(8, -1);
 			return (clas === type);
+		},
+
+		parentWidth: function() {
+			return d3.select(this.parentNode).style('width');
+		},
+	
+		setPadding: function(width, dataLen) {
+			
+			var datumLen = (width/dataLen);
+
+			return {
+				'inner': function(inner) {
+					return  datumLen * inner;
+				},
+
+				'outer': function(outer) {
+					return datumLen * outer;
+				}
+			};
 		}
 	},
 
-	_activeChart = ( function() {
+	_chart = function(node, dimensions) {
+		
+		var chart = {};
 
-			var _parentWidth = function() {
-				return d3.select(this.parentNode).style('width');
-			},
-	
-			_setPadding = function(width, dataLen) {
+		// store dimensions in scope
+		chart.width = dimensions[0];
+		chart.height = dimensions[1];
+
+		// initial chart entity
+		chart.entity = node.append('svg')
+			.attr('width', chart.width)
+			.attr('height', chart.height);
+
+		// sets the chart scales
+		chart.axis = function(padding) {
 				
-				var datumLen = (width/dataLen);
+			var padding = padding[0]/this.width || 0,
+				outerPadding = padding[1]/this.width || 0;
 
-				return {
-					'inner': function(inner) {
-						return  datumLen * inner;
-					},
+			// set chart scales
+			this.xScale = d3.scale.ordinal()
+				.rangeRoundBands([0, this.width], padding, outerPadding);
 
-					'outer': function(outer) {
-						return datumLen * outer;
-					}
-				};
-			}
+			this.yScale = d3.scale.linear().range([this.height]);
 
-			// this -> config with properties
-			// set width; padding; orient, return result
-			return function(node) {
+			return this;
+		};
 
-				// test obj
-				console.log(this.scale, this.node, this.padding, this.points, this.orient);
-
-				// set props for chart...
-			};
-
-	} )();
+		return chart;
+	};
 
 	// Active Chart api
 	function ActiveChart(id) {
@@ -69,25 +87,37 @@
 		}
 	}
 
-	ActiveChart.prototype.data = function(data) {
-		this.points = data;
+	// set the chart domain from data given (object, [xdomain, ydomain])
+	ActiveChart.prototype.data = function(data, domain) {
+		
+		this.domain = {
+			'x': data.map(function(d) { return d[domain[0]]; }),
+			'y': data.map(function(d) { return d[domain[1]]; })
+		};
+
 		return this;
 	};
 
 	// width scale (1 -> 100%, .5 -> 50%)
 	ActiveChart.prototype.scale = function(widthScale) {
-		this.scale = widthScale;
+		this.scale = _util.is(widthScale, 'Number')? widthScale : _defaults.scale;
 
 		return this;
 	};
 
-	// inner & outer chart padding
+	ActiveChart.prototype.height = function(height) {
+		this.height = _util.is(height, 'Number')? height : _defaults.height;
+
+		return this;
+	};
+
+	// inner & outer chart padding [inner, outer]
 	ActiveChart.prototype.padding = function(padding) {
 
-		this.padding = {};
+		var paddingInner = padding[0]? padding[0] : _defaults.innerPadding,
+		paddingOuter = padding[1]? padding[1] : _defaults.outerPadding;
 
-		this.padding.inner = padding[0]? padding[0] : _defaults.innerPadding,
-		this.padding.outer = padding[1]? padding[1] : _defaults.outerPadding;
+		this.padding = [paddingInner, paddingOuter];
 
 		return this;
 	};
@@ -111,8 +141,25 @@
 	};
 
 	// draw the chart
+	// will need to verifiy all properties are set??
 	ActiveChart.prototype.draw = function() {
-		_activeChart.call(this);
+		
+		console.log(this.height,
+			this.scale, 
+			this.node, 
+			this.padding, 
+			this.domain, 
+			this.orient
+		);
+
+		var rW = 1000,
+		
+		padding = _util.setPadding(rW, this.domain.length),
+		iPadding = padding.inner(this.padding[0]),
+		oPadding = padding.outer(this.padding[1]);
+
+		// draw the chart to the dom node
+		_chart(this.node, [rW, this.height]).axis([iPadding, oPadding]);
 	};
 
 	// removes the need for user to use 'new'	
