@@ -11,7 +11,7 @@
 		'invalidOrient': 'orient property much be set to either veritical or horizontal'
 	},
 
-	_consts = {
+	_defaults = {
 		'width': 1,
 		'innerPadding': 0.5,
 		'outerPadding': 0,
@@ -89,8 +89,8 @@
 
 			this.padding = {};
 
-			this.padding.inner = padding[0]? padding[0] : _consts.innerPadding,
-			this.padding.outer = padding[1]? padding[1] : _consts.outerPadding;
+			this.padding.inner = padding[0]? padding[0] : _defaults.innerPadding,
+			this.padding.outer = padding[1]? padding[1] : _defaults.outerPadding;
 
 			return this;
 		},
@@ -104,7 +104,7 @@
 				if(orient === 'vertical' || orient === 'horizontal') {
 					this.orient = orient;
 				} else {
-					this.orient = _consts.orient;
+					this.orient = _defaults.orient;
 				}
 			} else {
 				throw new Error(_error.invalidOrient);
