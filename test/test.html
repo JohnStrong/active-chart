@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<head>
+	<title>active-chart.js</title>
+</head>
+<style>
+div[class*='container-'] {
+	margin: 20px 0;
+	background-color: #444;
+}
+
+.container-100 {
+	min-height: 200px;
+	width: 100%;
+}
+
+.container-40 {
+	min-height: 200px;
+	width: 40%;
+}
+
+.container-60 {
+	min-height: 200px;
+	width: 60%;
+}
+</style>
+<body>
+	<!-- 100% width test -->
+	<div class="container-100">
+		<div id="test-100"></div>
+	</div>
+	<!-- 40% width test -->
+	<div class="container-40">
+		<div id="test-40"></div>
+	</div>
+	<!-- 60% width test -->
+	<div class="container-60">
+		<div id="test-60"></div>
+	</div>
+	<script src="../lib/d3.js"></script>
+	<script src="../active-chart.js"></script>
+	<script>
+
+		var testData = [
+			{
+				'county': 'Ireland',
+				'averageHeight': '5.10'
+			},
+			{
+				'county': 'USA',
+				'averageHeight': '6.0'
+			}
+		];
+
+		activeChart('#test-100', testData, {
+			'width': 1,
+			'innerPadding': 0.5,
+			'outerPadding': 0
+		});
+		
+	</script>
+</body>
+</html>
