@@ -14,7 +14,7 @@
 	_defaults = {
 		'height': 1000,
 		'scale': 1,
-		'innerPadding': 0.5,
+		'innerPadding': 0,
 		'outerPadding': 0,
 		'orient': 'vertical'
 	},
@@ -152,6 +152,7 @@
 			this.orient
 		);
 
+		// temporary width constant for testing purposes
 		var rW = 1000,
 		
 		padding = _util.setPadding(rW, this.domain.length),
@@ -167,6 +168,7 @@
 		return new ActiveChart(id);
 	};
 
-	window.activeChart = activeChart;
+	// outward facing api namespace(s)
+	window.activeChart = window.AC = activeChart;
 
 } )(d3);
