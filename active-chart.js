@@ -6,6 +6,10 @@
 
 	'use strict';
 
+	String.prototype.toInt = function() {
+		return parseInt(this, 10);
+	};
+
 	var _error = {
 		'invalidId': 'first function parameter much be a valid element id',
 		'invalidOrient': 'orient property much be set to either veritical or horizontal'
@@ -26,10 +30,6 @@
 			return (clas === type);
 		},
 
-		parentWidth: function() {
-			return d3.select(this.parentNode).style('width');
-		},
-	
 		setPadding: function(width, dataLen) {
 			
 			var datumLen = (width/dataLen);
@@ -46,41 +46,53 @@
 		}
 	},
 
-	_chart = function(node, dimensions) {
+	_chart = function(skeleton) {
 		
-		var chart = {};
+		var node = skeleton.node,
+		dimensions = skeleton.dimensions,
+		padding = skeleton.padding,
 
-		// store dimensions in scope
-		chart.width = dimensions[0];
-		chart.height = dimensions[1];
+		// real dimensions
+		width = dimensions[0],
+		height = dimensions[1],
 
 		// initial chart entity
-		chart.entity = node.append('svg')
-			.attr('width', chart.width)
-			.attr('height', chart.height);
+		entity = node.append('svg')
+			.attr('width', width)
+			.attr('height', height),
 
-		// sets the chart scales
-		chart.axis = function(padding) {
-				
-			var padding = padding[0]/this.width || 0,
-				outerPadding = padding[1]/this.width || 0;
 
-			// set chart scales
-			this.xScale = d3.scale.ordinal()
-				.rangeRoundBands([0, this.width], padding, outerPadding);
+		padding = padding[0]/width || 0,
+		outerPadding = padding[1]/width || 0,
 
-			this.yScale = d3.scale.linear().range([this.height]);
+		// set chart scales
+		xScale = d3.scale.ordinal()
+			.rangeRoundBands([0, width], padding, outerPadding),
+		yScale = d3.scale.linear().range([height, 0]);
 
-			return this;
+		// domain keys for chartable data
+		// chartable data
+		return function(domain, data) {
+			
+			var xDomain = xScale.domain(data.map(function(d) { return d[domain.x]; })),
+				yDomain = yScale.domain(data.map(function(d) { return d[domain.y]; }));
+
+			entity.selectAll('.bar')
+				.data(data)
+				.enter()
+				.append('rect')
+				.attr('x', function(d) { return xScale(d[domain.x]); })
+				.attr('width', xScale.rangeBand())
+				.attr('y', function(d) { return yScale(d[domain.y]); })
+				.attr('height', function(d) { return height - yScale(d[domain.y]); });
 		};
-
-		return chart;
 	};
 
 	// Active Chart api
 	function ActiveChart(id) {
 		try {
 			this.node = d3.select(id);
+			this.width = this.node.style('width').toInt()
 		}
 		catch (e) {
 			throw new Error(_error.invalidId);
@@ -90,9 +102,11 @@
 	// set the chart domain from data given (object, [xdomain, ydomain])
 	ActiveChart.prototype.data = function(data, domain) {
 		
+		this.data = data;
+
 		this.domain = {
-			'x': data.map(function(d) { return d[domain[0]]; }),
-			'y': data.map(function(d) { return d[domain[1]]; })
+			'x': domain[0],
+			'y': domain[1]
 		};
 
 		return this;
@@ -144,23 +158,31 @@
 	// will need to verifiy all properties are set??
 	ActiveChart.prototype.draw = function() {
 		
-		console.log(this.height,
+		console.log(
+			this.height,
+			this.width,
 			this.scale, 
 			this.node, 
-			this.padding, 
+			this.padding,
+			this.data, 
 			this.domain, 
 			this.orient
 		);
 
-		// temporary width constant for testing purposes
-		var rW = 1000,
-		
-		padding = _util.setPadding(rW, this.domain.length),
-		iPadding = padding.inner(this.padding[0]),
-		oPadding = padding.outer(this.padding[1]);
+		var self = this,
+
+		padding = _util.setPadding(this.width, this.domain.length),
+		innerPadding = padding.inner(this.padding[0]),
+		outerPadding = padding.outer(this.padding[1]),
+
+		skeleton = {
+			'node': self.node,
+			'dimensions': [self.width, self.height],
+			'padding': [innerPadding, outerPadding]
+		};
 
 		// draw the chart to the dom node
-		_chart(this.node, [rW, this.height]).axis([iPadding, oPadding]);
+		_chart(skeleton)(this.domain, this.data);
 	};
 
 	// removes the need for user to use 'new'	
