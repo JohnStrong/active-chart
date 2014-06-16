@@ -7,7 +7,7 @@
 <style>
 div[class*='container-'] {
 	margin: 20px 0;
-	background-color: #ccc;
+	background-color: #f2f2f2;
 	min-height: 200px;
 }
 
@@ -48,15 +48,32 @@ div[class*='container-'] {
 			{
 				'county': 'USA',
 				'averageHeight': '6.0'
+			},
+			{
+				'county': 'Italy',
+				'averageHeight': '5.10'
+			},
+			{
+				'county': 'Bahrain',
+				'averageHeight': '5.5'
+			},
+			{
+				'county': 'France',
+				'averageHeight': '5.9'
+			},
+			{
+				'county': 'Japan',
+				'averageHeight': '5.7'
 			}
 		];
 
 		activeChart('#test-100')
 			.data(testData, ['county', 'averageHeight'])
-			.scale(1.0)
+			.scale(.9)
 			.height(500)
-			.padding([0.2, 0])
+			.padding([0.2, 0.1])
 			.orient('vertical')
+			.color(['#fff', '#ccc', '#aaa', '#888', '#555', '#222'])
 			.draw();
 		
 	</script>
