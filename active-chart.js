@@ -12,6 +12,8 @@
 	};
 
 
+	// hold all constant data for the project
+	// includes api defaults; error messages; encapsulated properties (perhaps)
 	var _consts = {
 		
 		error: {
@@ -27,7 +29,7 @@
 			'orient': 'vertical'
 		}
 
-		// will add custom color range for d3 chart later
+		// MAY add default custom color range for d3 chart later (unknown data length??)
 	},
 
 	_util = {
@@ -53,6 +55,8 @@
 		}
 	},
 
+	// d3 chart generatating function
+	// takes chart options, set by Active Chart api [node, dimensions, padding, colRang]
 	_chart = function(skeleton) {
 
 		var node = skeleton.node,
@@ -77,11 +81,10 @@
 			.rangeRoundBands([0, width], padding, outerPadding),
 		yScale = d3.scale.linear().range([height, 0]),
 
-		// this will be applied by datum index
-		colorScale = d3.scale.ordinal().range(skeleton.colRange);
+		// applied by datum index to color each bar (style=fill)
+		colorScale = skeleton.colRange? d3.scale.ordinal().range(skeleton.colRange) :
+			d3.scale.category20c();
 
-		// domain keys for chartable data
-		// chartable data
 		return function(domain, data) {
 			
 			// set domain from which to apply x/y scales
