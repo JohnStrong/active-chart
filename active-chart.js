@@ -77,7 +77,8 @@
 			.rangeRoundBands([0, width], padding, outerPadding),
 		yScale = d3.scale.linear().range([height, 0]),
 
-		colorScale = d3.scale.category20();
+		// this will be applied by datum index
+		colorScale = d3.scale.ordinal().range(skeleton.colRange);
 
 		// domain keys for chartable data
 		// chartable data
