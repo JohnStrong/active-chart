@@ -35,8 +35,7 @@
 	_util = {
 
 		is: (entity, type) => {
-			var clas = Object.prototype.toString.call(entity).slice(8, -1);
-			return (clas === type);
+			return Object.prototype.toString.call(entity).slice(8, -1) === type;
 		}
 	},
 
