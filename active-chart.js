@@ -37,22 +37,22 @@
 		is: function(entity, type) {
 			var clas = Object.prototype.toString.call(entity).slice(8, -1);
 			return (clas === type);
-		},
-
-		setPadding: function(width, dataLen) {
-			
-			var datumLen = (width/dataLen);
-
-			return {
-				'inner': function(inner) {
-					return  datumLen * inner;
-				},
-
-				'outer': function(outer) {
-					return datumLen * outer;
-				}
-			};
 		}
+	},
+
+	_setPadding = function(width, dataLen) {
+			
+		var datumLen = (width/dataLen);
+
+		return {
+			'inner': function(inner) {
+				return  datumLen * inner;
+			},
+
+			'outer': function(outer) {
+				return datumLen * outer;
+			}
+		};
 	},
 
 	// return d3.scale x/y for the charting function
@@ -218,7 +218,8 @@
 		// apply user defined scale to current container width
 		var realWidth = this.width*this.scale,
 
-		padding = _util.setPadding(realWidth, this.data.length),
+		padding = _setPadding(realWidth, this.data.length),
+		
 		innerPadding = padding.inner(this.padding[0]),
 		outerPadding = padding.outer(this.padding[1]),
 
