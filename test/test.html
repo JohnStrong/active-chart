@@ -42,38 +42,38 @@ div[class*='container-'] {
 
 		var testData = [
 			{
-				'county': 'Ireland',
-				'averageHeight': '5.10'
-			},
-			{
-				'county': 'USA',
+				'country': 'USA',
 				'averageHeight': '6.0'
 			},
 			{
-				'county': 'Italy',
+				'country': 'Ireland',
 				'averageHeight': '5.10'
 			},
 			{
-				'county': 'Bahrain',
+				'country': 'Italy',
+				'averageHeight': '5.10'
+			},
+			{
+				'country': 'Bahrain',
 				'averageHeight': '5.5'
 			},
 			{
-				'county': 'France',
+				'country': 'France',
 				'averageHeight': '5.9'
 			},
 			{
-				'county': 'Japan',
+				'country': 'Japan',
 				'averageHeight': '5.7'
 			}
 		];
 
 		activeChart('#test-100')
-			.data(testData, ['county', 'averageHeight'])
+			.data(testData, ['country', 'averageHeight'])
 			.scale(.9)
 			.height(500)
 			.padding([0.2, 0.1])
 			.orient('vertical')
-			.color(['#fff', '#ccc', '#aaa', '#888', '#555', '#222'])
+			.color(['#244', '#255', '#266', '#277', '#288', '#299'])
 			.draw();
 		
 	</script>

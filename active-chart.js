@@ -55,46 +55,73 @@
 		}
 	},
 
+	// return d3.scale x/y for the charting function
+	_scale = (function() {
+		var xScale = d3.scale.ordinal(),
+		yScale = d3.scale.linear();
+
+		// dimensions -> [width:Number, height:Number]
+		// padding -> [innerPadding:Number, outerPadding:Number]
+		return function(dimensions, padding) {
+
+			var innerP = padding[0]/dimensions[0], 
+			outerP = padding[1]/dimensions[1];
+
+			return {
+				'xScale': xScale.rangeRoundBands([0, dimensions[0]], innerP, outerP),
+				'yScale': yScale.range([dimensions[1], 10])
+			};
+		};
+	})(),
+
+	// take the chartable data
+	// can compute domains for d3.scale(s) on the data
+	_domain = function(data) {
+		
+		return function(scale, domain) {
+			return scale.domain(data.map(function(d) { return d[domain]; }));
+		};
+
+	},
+
+	// return d3 color scale with set color range
+	_color = function(colRange) {
+		return d3.scale.ordinal().range(colRange);
+	},
+
+	// takes a d3 html node element that can build svg element from
+	_svg = function(from) {
+		
+		return {
+			'create': function(dimensions) {
+				return from.append('svg')
+					.attr('width', dimensions[0])
+					.attr('height', dimensions[1]);
+			}
+		};
+	},
+
 	// d3 chart generatating function
 	// takes chart options, set by Active Chart api [node, dimensions, padding, colRang]
-	_chart = function(skeleton) {
+	_chart = function(scales, domains, colorScale, node) {
 
-		var node = skeleton.node,
-		dimensions = skeleton.dimensions,
-		padding = skeleton.padding,
-
-		// real dimensions
-		width = dimensions[0],
-		height = dimensions[1],
-
-		// initial chart entity
-		entity = node.append('svg')
-			.attr('width', width)
-			.attr('height', height),
-
-
-		padding = padding[0]/width || 0,
-		outerPadding = padding[1]/width || 0,
+		// height scale for svg
+		var height = node.attr('height'),
 
 		// set chart scales
-		xScale = d3.scale.ordinal()
-			.rangeRoundBands([0, width], padding, outerPadding),
-		yScale = d3.scale.linear().range([height, 0]),
+		xScale = scales.xScale,
+		yScale = scales.yScale,
 
-		// applied by datum index to color each bar (style=fill)
-		colorScale = skeleton.colRange? d3.scale.ordinal().range(skeleton.colRange) :
-			d3.scale.category20c();
+		// set domain from which to apply x/y scales
+		xDomain = domains[0],
+		yDomain = domains[1];
 
 		return function(domain, data) {
-			
-			// set domain from which to apply x/y scales
-			var xDomain = xScale.domain(data.map(function(d) { return d[domain.x]; })),
-			yDomain = yScale.domain(data.map(function(d) { return d[domain.y]; }));
 
 			// TODO: generate axis
 
 			// TODO: generate the chart .... really basic right now
-			entity.selectAll('.bar')
+			node.selectAll('.bar')
 				.data(data)
 				.enter()
 				.append('rect')
@@ -102,7 +129,12 @@
 				.attr('width', xScale.rangeBand())
 				.attr('y', function(d) { return yScale(d[domain.y]); })
 				.attr('height', function(d) { return height - yScale(d[domain.y]); })
-				.style('fill', function(d, i) { return colorScale(i); });
+				.style('fill', function(d, i) { return colorScale(i); })
+				/*
+				.each(function() {
+					console.log(this);
+				})
+				*/;
 		};
 	};
 
@@ -175,7 +207,7 @@
 
 	// should take a color range array
 	ActiveChart.prototype.color = function(colRange) {
-		this.colRange = _util.is(colRange, 'Array')? colRange : undefined;
+		this.colRange = _util.is(colRange, 'Array')? colRange : null;
 
 		return this;
 	}
@@ -183,26 +215,35 @@
 	// draw the chart
 	ActiveChart.prototype.draw = function() {
 		
-		var self = this,
-
 		// apply user defined scale to current container width
-		realWidth = this.width*this.scale,
+		var realWidth = this.width*this.scale,
 
 		padding = _util.setPadding(realWidth, this.data.length),
 		innerPadding = padding.inner(this.padding[0]),
 		outerPadding = padding.outer(this.padding[1]),
 
-		skeleton = {
-			'node': self.node,
-			'dimensions': [realWidth, self.height],
-			'padding': [innerPadding, outerPadding],
-			'colRange': self.colRange
-		};
+		// array [ width, height]
+		dimensions = [realWidth, this.height],
 		
-		console.log(skeleton);
+		// { xScale: d3.scale.ordinal, yScale: d3.scale.linear }
+		scales = _scale(dimensions, [innerPadding, outerPadding]),
 
-		// draw the chart to the dom node
-		_chart(skeleton)(this.domain, this.data);
+		domain = _domain(this.data),
+
+		// Array [ xScale: d3.domain, yScale, d3.domain ]
+		domains = [
+			domain(scales['xScale'], this.domain['x']), 
+			domain(scales['yScale'], this.domain['y'])
+		],
+
+		// d3.scale.ordinal with color range OR default 20c
+		color = this.colRange? _color(this.colRange) : d3.scale.category20c(),
+
+		// d3 svg node with set width/height
+		svgNode = _svg(this.node).create(dimensions);
+
+		// draw the chart using computed properties side-effectfully (for now...)
+		_chart(scales, domains, color, svgNode)(this.domain, this.data);
 	};
 
 	// removes the need for user to use 'new'	
