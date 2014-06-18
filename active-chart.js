@@ -14,11 +14,11 @@
 
 	// hold all constant data for the project
 	// includes api defaults; error messages; encapsulated properties (perhaps)
-	var _consts = {
+	const _consts = {
 		
 		error: {
-		'invalidId': 'first function parameter much be a valid element id',
-		'invalidOrient': 'orient property much be set to either veritical or horizontal'
+			'invalidId': 'first function parameter much be a valid element id',
+			'invalidOrient': 'orient property much be set to either veritical or horizontal'
 		},
 
 		defaults: {
@@ -34,7 +34,7 @@
 
 	_util = {
 
-		is: function(entity, type) {
+		is: (entity, type) => {
 			var clas = Object.prototype.toString.call(entity).slice(8, -1);
 			return (clas === type);
 		}
@@ -45,24 +45,25 @@
 		var datumLen = (width/dataLen);
 
 		return {
-			'inner': function(inner) {
+			'inner': inner => {
 				return  datumLen * inner;
 			},
 
-			'outer': function(outer) {
+			'outer': outer => {
 				return datumLen * outer;
 			}
 		};
 	},
 
 	// return d3.scale x/y for the charting function
-	_scale = (function() {
+	_scale = ( function() {
+
 		var xScale = d3.scale.ordinal(),
 		yScale = d3.scale.linear();
 
 		// dimensions -> [width:Number, height:Number]
 		// padding -> [innerPadding:Number, outerPadding:Number]
-		return function(dimensions, padding) {
+		return (dimensions, padding) => {
 
 			var innerP = padding[0]/dimensions[0], 
 			outerP = padding[1]/dimensions[1];
@@ -72,13 +73,14 @@
 				'yScale': yScale.range([dimensions[1], 10])
 			};
 		};
-	})(),
+
+	} )(),
 
 	// take the chartable data
 	// can compute domains for d3.scale(s) on the data
 	_domain = function(data) {
 		
-		return function(scale, domain) {
+		return (scale, domain) => {
 			return scale.domain(data.map(function(d) { return d[domain]; }));
 		};
 
@@ -93,7 +95,7 @@
 	_svg = function(from) {
 		
 		return {
-			'create': function(dimensions) {
+			'create': dimensions => {
 				return from.append('svg')
 					.attr('width', dimensions[0])
 					.attr('height', dimensions[1]);
@@ -116,7 +118,7 @@
 		xDomain = domains[0],
 		yDomain = domains[1];
 
-		return function(domain, data) {
+		return (domain, data) => {
 
 			// TODO: generate axis
 
@@ -219,7 +221,7 @@
 		var realWidth = this.width*this.scale,
 
 		padding = _setPadding(realWidth, this.data.length),
-		
+
 		innerPadding = padding.inner(this.padding[0]),
 		outerPadding = padding.outer(this.padding[1]),
 
@@ -248,7 +250,7 @@
 	};
 
 	// removes the need for user to use 'new'	
-	var activeChart = function(id) {
+	const activeChart = function(id) {
 		return new ActiveChart(id);
 	};
 
