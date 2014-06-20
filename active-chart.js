@@ -32,10 +32,37 @@
 		// MAY add default custom color range for d3 chart later (unknown data length??)
 	},
 
+
+	// general helper functions
 	_util = {
 
-		is: (entity, type) => {
+		'is': function(entity, type) {
 			return Object.prototype.toString.call(entity).slice(8, -1) === type;
+		},
+
+		'filter': function(obj, pred) {
+			
+			var res = [];
+
+			for(var ith in obj) {
+				if(pred(ith)) {
+					res.push(obj[ith]);
+				}
+			}
+
+			return res;
+		},
+
+		'with': function(dependencies) {
+
+			return (fn, deps) => {
+				
+				var filtered = this.filter(dependencies, function(dep) {
+					return deps.indexOf(dep) > -1;
+				});
+
+				return fn.apply(null, filtered);
+			}
 		}
 	},
 
@@ -60,8 +87,8 @@
 		var xScale = d3.scale.ordinal(),
 		yScale = d3.scale.linear();
 
-		// dimensions -> [width:Number, height:Number]
-		// padding -> [innerPadding:Number, outerPadding:Number]
+		// dimensions -> [width, height]
+		// padding -> [inner, outer]
 		return (dimensions, padding) => {
 
 			var innerP = padding[0]/dimensions[0], 
@@ -95,6 +122,7 @@
 		
 		return {
 			'create': dimensions => {
+
 				return from.append('svg')
 					.attr('width', dimensions[0])
 					.attr('height', dimensions[1]);
@@ -226,9 +254,16 @@
 
 		// array [ width, height]
 		dimensions = [realWidth, this.height],
+		paddingArr = [innerPadding, outerPadding],
+
+		// apply vars to fn with filter
+		applyWith = _util['with']({
+			'dimensions': dimensions, 
+			'padding': paddingArr
+		}),
 		
 		// { xScale: d3.scale.ordinal, yScale: d3.scale.linear }
-		scales = _scale(dimensions, [innerPadding, outerPadding]),
+		scales = applyWith(_scale, ['dimensions', 'padding']),
 
 		domain = _domain(this.data),
 
@@ -241,8 +276,10 @@
 		// d3.scale.ordinal with color range OR default 20c
 		color = this.colRange? _color(this.colRange) : d3.scale.category20c(),
 
+		node = _svg(this.node),
+
 		// d3 svg node with set width/height
-		svgNode = _svg(this.node).create(dimensions);
+		svgNode = applyWith(node.create, ['dimensions']);
 
 		// draw the chart using computed properties side-effectfully (for now...)
 		_chart(scales, domains, color, svgNode)(this.domain, this.data);
