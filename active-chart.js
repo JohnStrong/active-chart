@@ -13,15 +13,15 @@
 
 
 	// hold all constant data for the project
-	// includes api defaults; error messages; encapsulated properties (perhaps)
-	const _consts = {
+	// includes api api; error messages; encapsulated properties (perhaps)
+	const _defaults = {
 		
-		error: {
+		'error': {
 			'invalidId': 'first function parameter much be a valid element id',
 			'invalidOrient': 'orient property much be set to either veritical or horizontal'
 		},
 
-		defaults: {
+		'api': {
 			'height': 1000,
 			'scale': 1,
 			'innerPadding': 0,
@@ -171,10 +171,9 @@
 	function ActiveChart(id) {
 		try {
 			this.node = d3.select(id);
-			this.width = this.node.style('width').toInt()
 		}
 		catch (e) {
-			throw new Error(_consts.error.invalidId);
+			throw new Error(_defaults.error.invalidId);
 		}
 	}
 
@@ -193,13 +192,17 @@
 
 	// width scale (1 -> 100%, .5 -> 50%)
 	ActiveChart.prototype.scale = function(widthScale) {
-		this.scale = _util.is(widthScale, 'Number')? widthScale : _consts.defaults.scale;
+		var scale = _util.is(widthScale, 'Number') ? 
+			widthScale : _defaults.api.scale;
+
+		this.width = this.node.style('width').toInt() * scale;
 
 		return this;
 	};
 
 	ActiveChart.prototype.height = function(height) {
-		this.height = _util.is(height, 'Number')? height : _consts.defaults.height;
+		this.height = _util.is(height, 'Number') ? 
+			height : _defaults.api.height;
 
 		return this;
 	};
@@ -207,8 +210,11 @@
 	// inner & outer chart padding [inner, outer]
 	ActiveChart.prototype.padding = function(padding) {
 
-		var paddingInner = padding[0]? padding[0] : _consts.defaults.innerPadding,
-		paddingOuter = padding[1]? padding[1] : _consts.defaults.outerPadding;
+		var paddingInner = _util.is(padding[0], 'Number') ? 
+			padding[0] : _defaults.api.innerPadding,
+		
+		paddingOuter = _util.is(padding[1], 'Number')? 
+			padding[1] : _defaults.api.outerPadding;
 
 		this.padding = [paddingInner, paddingOuter];
 
@@ -227,7 +233,7 @@
 				this.orient = _defaults.orient;
 			}
 		} else {
-			throw new Error(_consts.error.invalidOrient);
+			throw new Error(_defaults.error.invalidOrient);
 		}
 
 		return this;
@@ -236,7 +242,8 @@
 
 	// should take a color range array
 	ActiveChart.prototype.color = function(colRange) {
-		this.colRange = _util.is(colRange, 'Array')? colRange : null;
+		this.colRange = _util.is(colRange, 'Array')? 
+			_color(colRange) : d3.scale.category20c();
 
 		return this;
 	}
@@ -245,16 +252,15 @@
 	ActiveChart.prototype.draw = function() {
 		
 		// apply user defined scale to current container width
-		var realWidth = this.width*this.scale,
+		var pad = _setPadding(this.width, this.data.length),
 
-		padding = _setPadding(realWidth, this.data.length),
-
-		innerPadding = padding.inner(this.padding[0]),
-		outerPadding = padding.outer(this.padding[1]),
+		paddingArr = [
+			pad.inner(this.padding[0]), 
+			pad.outer(this.padding[1])
+		],
 
 		// array [ width, height]
-		dimensions = [realWidth, this.height],
-		paddingArr = [innerPadding, outerPadding],
+		dimensions = [this.width, this.height],
 
 		// apply vars to fn with filter
 		applyWith = _util['with']({
@@ -265,24 +271,18 @@
 		// { xScale: d3.scale.ordinal, yScale: d3.scale.linear }
 		scales = applyWith(_scale, ['dimensions', 'padding']),
 
+		svgNode = applyWith(_svg(this.node).create, ['dimensions']),
+
 		domain = _domain(this.data),
 
 		// Array [ xScale: d3.domain, yScale, d3.domain ]
 		domains = [
 			domain(scales['xScale'], this.domain['x']), 
 			domain(scales['yScale'], this.domain['y'])
-		],
-
-		// d3.scale.ordinal with color range OR default 20c
-		color = this.colRange? _color(this.colRange) : d3.scale.category20c(),
-
-		node = _svg(this.node),
-
-		// d3 svg node with set width/height
-		svgNode = applyWith(node.create, ['dimensions']);
+		];
 
 		// draw the chart using computed properties side-effectfully (for now...)
-		_chart(scales, domains, color, svgNode)(this.domain, this.data);
+		_chart(scales, domains, this.colRange, svgNode)(this.domain, this.data);
 	};
 
 	// removes the need for user to use 'new'	

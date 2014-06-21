@@ -40,6 +40,8 @@ div[class*='container-'] {
 	<script src="../active-chart.js"></script>
 	<script>
 
+		// test data
+		// Average height of various countries (inches)
 		var testData = [
 			{
 				'country': 'USA',
@@ -64,16 +66,25 @@ div[class*='container-'] {
 			{
 				'country': 'Japan',
 				'averageHeight': '5.7'
+			},
+			{
+				'country': 'Ghana',
+				'averageHeight': '5.65'
+			},
+			{
+				'country': 'Iran',
+				'averageHeight': '5.7'
 			}
 		];
 
+		// usage...
 		activeChart('#test-100')
 			.data(testData, ['country', 'averageHeight'])
 			.scale(.9)
 			.height(500)
 			.padding([0.2, 0.1])
 			.orient('vertical')
-			.color(['#244', '#255', '#266', '#277', '#288', '#299'])
+			.color(['#244', '#255', '#266', '#277', '#288', '#299', '#2AA', '#2BB'])
 			.draw();
 		
 	</script>
